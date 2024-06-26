@@ -28,7 +28,7 @@ local body = require("classes.Body")
 -- classes
 
 ---@class Collider
----@field collide fun(self, Collider):boolean
+---@field collide fun(self, slaveCollider: Collider):boolean
 local collider = {}
 local Collider_meta = {__index = collider}
 
