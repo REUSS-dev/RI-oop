@@ -51,7 +51,7 @@ end
 function collider:collide(slaveCollider)
     if slaveCollider.body.bodyType == body.BodyType.CIRCULAR then
         ---@cast slaveCollider ColliderCircular
-        self:collideCircular(slaveCollider)
+        return self:collideCircular(slaveCollider)
     end
 end
 
