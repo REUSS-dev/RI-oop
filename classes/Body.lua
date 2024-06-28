@@ -69,6 +69,8 @@ function Body.new(type, ...)
             fill = "fill"
         }
 
+        ---Set fill for circle
+        ---@param isFilled boolean
         function obj:setFill(isFilled)
             self.fill = isFilled and "fill" or "line"
         end
