@@ -46,6 +46,18 @@ function mc:turn(rads)
     self.angle = self.angle + rads
 end
 
+function mc:reverseAngle()
+    self.angle = self.angle + math.pi
+end
+
+function mc:reflectAngleVertical()
+    self.angle = self.angle * -1
+end
+
+function mc:reflectAngleHorizontal()
+    self.angle = (self.angle + math.pi) * -1
+end
+
 ---Get distance to other movement controller object
 ---@param slaveController MovementController
 ---@return number
