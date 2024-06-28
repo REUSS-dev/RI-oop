@@ -47,18 +47,18 @@ end
 ---@param cbody Body
 ---@return Collider
 function Collider.new(x, y, cbody)
-    assert(body, "No body defined for Collider object")
+    assert(cbody, "No body defined for Collider object")
 
     ---@class Collider
     local obj = {
         x = x or 0,
         y = y or 0,
-        body = body
+        body = cbody
     }
 
     if cbody.bodyType == body.BodyType.CIRCULAR then
         local CircularCollider = require("classes.colliders.Circular")
-        setmetatable(obj, {__index = CircularCollider})
+        setmetatable(obj, {__index = CircularCollider.class})
 
         return obj
     end
