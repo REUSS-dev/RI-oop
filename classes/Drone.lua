@@ -20,6 +20,10 @@ local DRONE_VELOCITY_VARIANCE = 100
 
 local DRONE_ANGLE_DEVIANCE = 0.1
 
+local DRONE_COUNTER_INCREMENT = 10
+local DRONE_COUNTER_GENERATION_MINIMUM = 0
+local DRONE_COUNTER_GENERATION_MAXIMUM = 1000
+
 -- consts
 
 local DRONE_VELOCITY_MINIMUM = DRONE_VELOCITY_BASE - DRONE_VELOCITY_VARIANCE
@@ -27,7 +31,7 @@ local DRONE_VELOCITY_MAXIMUM = DRONE_VELOCITY_BASE + DRONE_VELOCITY_VARIANCE
 
 -- vars
 
-
+local countersCount = 0
 
 -- init
 
@@ -35,20 +39,31 @@ local DRONE_VELOCITY_MAXIMUM = DRONE_VELOCITY_BASE + DRONE_VELOCITY_VARIANCE
 
 -- fnc
 
-
+local function setCountersCount(counters)
+    countersCount = counters
+end
 
 -- classes
 
 ---@class Drone
+---@field counters table<DestinationTypeIndex, number>
 local drone = {}
 local Drone_meta = {__index = drone}
+
+function drone:hasResource()
+    return self.res
+end
 
 function drone:getAngle()
     return self.controller.angle
 end
 
-function drone:getDroneDirectionals()
-    return self.controller.x, self.controller.y, self.controller.angle
+function drone:getDirectionals()
+    return self.controller.collider.x, self.controller.collider.y, self.controller.angle
+end
+
+function drone:resetCounter(counterIndex)
+    self.counters[counterIndex] = 0
 end
 
 function drone:tick(dt)
@@ -56,6 +71,15 @@ function drone:tick(dt)
     self.controller:turn(curve)
 
     self.controller:tick(dt)
+
+    for i = 1, countersCount do
+        self.counters[i] = self.counters[i] + DRONE_COUNTER_INCREMENT
+    end
+end
+
+function drone:toggleResource()
+    self.res = not self.res
+    self.body:setFill(self.res)
 end
 
 function drone:draw()
@@ -78,10 +102,14 @@ function Drone.new(x, y, angle, velocity, resource)
     
     ---@class Drone
     local obj = {
-        res = resource
+        res = resource,
+        counters = {}
     }
 
-    
+    for i = 1, countersCount do
+        obj.counters[i] = math.random(DRONE_COUNTER_GENERATION_MINIMUM, DRONE_COUNTER_GENERATION_MAXIMUM)
+    end
+
     obj.body = body.new(DRONE_BODY_TYPE, DRONE_RADIUS, DRONE_COLOR) --[[@as BodyCircular]]
     obj.controller = controller.new(
         x,
@@ -97,5 +125,7 @@ function Drone.new(x, y, angle, velocity, resource)
 
     return obj
 end
+
+Drone.setCountersCount = setCountersCount
 
 return Drone
