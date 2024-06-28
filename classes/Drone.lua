@@ -43,6 +43,14 @@ local DRONE_VELOCITY_MAXIMUM = DRONE_VELOCITY_BASE + DRONE_VELOCITY_VARIANCE
 local drone = {}
 local Drone_meta = {__index = drone}
 
+function drone:getAngle()
+    return self.controller.angle
+end
+
+function drone:getDroneDirectionals()
+    return self.controller.x, self.controller.y, self.controller.angle
+end
+
 function drone:tick(dt)
     local curve = (math.random(0, 200) - 100)/100 * DRONE_ANGLE_DEVIANCE
     self.controller:turn(curve)
@@ -63,19 +71,25 @@ end
 ---@param velocity number?
 ---@param resource boolean?
 function Drone.new(x, y, angle, velocity, resource)
-    local resourceValue
+    local resource = resource
     if resource == nil then
-        resourceValue = math.random(0, 1) == 0
+        resource = math.random(0, 1) == 0
     end
     
     ---@class Drone
     local obj = {
-        res = resourceValue
+        res = resource
     }
 
     
     obj.body = body.new(DRONE_BODY_TYPE, DRONE_RADIUS, DRONE_COLOR) --[[@as BodyCircular]]
-    obj.controller = controller.new(x, y, obj.body--[[@as Body]], velocity or math.random(DRONE_VELOCITY_MINIMUM, DRONE_VELOCITY_MAXIMUM), angle or math.rad(math.random(1, 360)))
+    obj.controller = controller.new(
+        x,
+        y,
+        obj.body--[[@as Body]],
+        velocity or math.random(DRONE_VELOCITY_MINIMUM, DRONE_VELOCITY_MAXIMUM),
+        angle or math.rad(math.random(1, 360))
+    )
     
     obj.body:setFill(obj.res)
 
