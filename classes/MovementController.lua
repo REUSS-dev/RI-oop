@@ -37,7 +37,7 @@ local MovementController_meta = {__index = mc}
 ---@return number
 ---@return number
 function mc:getCoordinates()
-    return self.x, self.y
+    return self.collider.x, self.collider.y
 end
 
 ---Turn movement controller by some amount
@@ -75,15 +75,12 @@ end
 ---Tick movement controller. Returns new X and Y coordinates.
 ---@param dt number
 ---@return number
----@return number
 function mc:tick(dt)
     local x = math.cos(self.angle) * self.v * dt
 	local y = math.sin(self.angle) * self.v * dt
 
-    self.x = self.x + x
-    self.y = self.y + y
-
-    return self.x, self.y
+    self.collider.x = self.collider.x + x
+    self.collider.y = self.collider.y + y
 end
 
 -- MovementController fnc
@@ -100,8 +97,6 @@ function MovementController.new(x, y, body, velocity, angle)
 
     ---@class MovementController
     local obj = {
-        x = x,
-        y = y,
         v = velocity or 0,
         angle = angle or 0,
         collider = Collider.new(x, y, body)
