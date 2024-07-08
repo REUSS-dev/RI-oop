@@ -30,6 +30,7 @@ local body = require("classes.Body")
 
 -- classes
 
+---Collider class for a circular body type
 ---@class ColliderCircular : Collider
 ---@field body BodyCircular
 local collider = {}
@@ -38,16 +39,17 @@ setmetatable(collider, {__index = collider_parent.class}) -- Set parenthesis for
 
 ---Collide circular v circular
 ---@private
----@param slaveCollider ColliderCircular
----@return boolean
+---@param slaveCollider ColliderCircular Another circular collider to check for a collision between.
+---@return boolean Collision **true**, if two colliders are colliding. **false** otherwise.
 function collider:collideCircular(slaveCollider)
     local contactDistance = self.body.radius + slaveCollider.body.radius
     local calculatedDistance = self:getDistanceToOrigin(slaveCollider)
 
     return calculatedDistance <= contactDistance
 end
+
 ---Collision function for circular body type
----@param slaveCollider Collider
+---@param slaveCollider Collider Another collider to check for a collision between.
 function collider:collide(slaveCollider)
     if slaveCollider.body.bodyType == body.BodyType.CIRCULAR then
         ---@cast slaveCollider ColliderCircular

@@ -1,4 +1,4 @@
--- Drone
+-- Destination
 local Destination = {}
 
 local body = require("classes.Body")
@@ -32,45 +32,47 @@ setmetatable(typeColors, {__index = function () return DESTINATION_COLOR_DEFAULT
 
 -- fnc
 
+---Returns standard radius of a destination point
+---@return pixels Radius Radius of a circular body for destination points
 local function getDestinationPointRadius()
     return DESTINATION_RADIUS
 end
 
 ---Sets color for type index
----@param typeIndex DestinationTypeIndex
----@param colortable ColorRGBA
+---@param typeIndex DestinationTypeIndex Type index to define color for
+---@param colortable ColorRGBA Respectful color table
 local function setTypeColor(typeIndex, colortable)
     typeColors[typeIndex] = colortable
 end
 
 -- classes
 
----@class Destination
+---@class Destination World object class
 local destination = {}
 local Destination_meta = {__index = destination}
 
 ---Get angle of destination point movement
----@return radians
+---@return radians Angle Angle of the destination point's movement
 function destination:getAngle()
     return self.controller.angle
 end
 
 ---Get destination point X, Y coordinate and angle.
----@return number
----@return number
----@return radians
+---@return pixels X X coordinate of a destination point
+---@return pixels Y Y coordinate of a destination point
+---@return radians Angle Angle of destination point's movement
 function destination:getDirectionals()
     return self.controller.collider.x, self.controller.collider.y, self.controller.angle
 end
 
 ---Get destination point type
----@return DestinationTypeIndex
+---@return DestinationTypeIndex Type Type of a destination point object
 function destination:getType()
     return self.type
 end
 
 ---Update destination point
----@param dt number
+---@param dt number Delta time to update destination point object
 function destination:tick(dt)
     local curve = (math.random(0, 200) - 100)/100 * DESTINATION_ANGLE_DEVIANCE
     self.controller:turn(curve)
@@ -83,13 +85,14 @@ function destination:draw()
     self.body:paint(self.controller:getCoordinates())
 end
 
--- Drone fnc
+-- Destination fnc
 
----Create new Drone object
----@param x number
----@param y number
----@param destinationType number
----@param velocity number?
+---Create new Destination object
+---@param x pixels Starting X coordinate of the new destination point
+---@param y pixels Starting Y coordinate of the new destination point
+---@param destinationType DestinationTypeIndex Set destination point type for the new destination point
+---@param velocity number? Starting movement velocity of the new destination point 
+---@return Destination Object
 function Destination.new(x, y, destinationType, velocity)
     assert(destinationType, "Destination type not set for destination point")
     

@@ -27,14 +27,14 @@ local body = require("classes.Body")
 
 -- classes
 
----@class Collider
+---@class Collider Virtualized body collider superclass
 ---@field collide fun(self, slaveCollider: Collider):boolean
 local collider = {}
 local Collider_meta = {__index = collider}
 
 ---Get distance to other collider object
----@param slaveCollider Collider
----@return number
+---@param slaveCollider Collider Another collider to get distance to
+---@return pixels Distance Distance between colliders
 function collider:getDistanceToOrigin(slaveCollider)
     return math.sqrt((self.x-slaveCollider.x)^2 + (self.y-slaveCollider.y)^2)
 end
@@ -42,10 +42,10 @@ end
 -- Collider fnc
 
 ---Create new collider object
----@param x number
----@param y number
----@param cbody Body
----@return Collider
+---@param x pixels Starting X coordinate of the new collider
+---@param y pixels Starting Y coordinate of the new collider
+---@param cbody Body Body object for the new collider
+---@return Collider Object
 function Collider.new(x, y, cbody)
     assert(cbody, "No body defined for Collider object")
 

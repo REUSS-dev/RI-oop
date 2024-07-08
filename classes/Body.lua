@@ -6,6 +6,7 @@ local Body = {}
 -- documentation
 
 ---@alias ColorRGBA {[1]: number, [2]:number, [3]:number, [4]:number}
+---@alias pixels number
 
 -- config
 
@@ -16,7 +17,7 @@ local Body = {}
 Body.DEFAULT_COLOR = {255, 255, 255}
 Body.DEFAULT_RADIUS = 10
 
----@enum BodyType
+---@enum BodyType Type constants for body types
 Body.BodyType = {
     CIRCULAR = "Circular"
 }
@@ -33,8 +34,8 @@ Body.BodyType = {
 
 ---Paint circular body
 ---@param self BodyCircular
----@param x number
----@param y number
+---@param x pixels X coordinate position for paint
+---@param y pixels Y coordinate position for paint
 local function paintCircular(self, x, y)
     love.graphics.setColor(self.color)
     love.graphics.circle(self.fill, x, y, self.radius)
@@ -43,8 +44,8 @@ end
 -- classes
 
 ---@class Body Circular object body class.
----@field bodyType BodyType
----@field paint fun(self, x: number, y: number)
+---@field bodyType BodyType Shape of a body object
+---@field paint fun(self, x: pixels, y: pixels) Body paint virtual function
 local body = {}
 local Body_meta = {__index = body}
 
@@ -53,7 +54,7 @@ local Body_meta = {__index = body}
 ---Create new body object
 ---@param type BodyType
 ---@param ... any
----@return Body
+---@return Body Object
 ---@overload fun(type: BodyType.CIRCULAR, ...):BodyCircular Create Circular body
 function Body.new(type, ...)
     local obj
