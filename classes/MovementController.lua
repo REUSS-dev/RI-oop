@@ -59,10 +59,11 @@ function mc:reflectAngleHorizontal()
 end
 
 ---Get distance to other movement controller object
+---@todo Gets distance to the other movement controller collider's origin. May want to return the actual distance between closest colliding points of colliders
 ---@param slaveController MovementController
 ---@return number
 function mc:getDistanceTo(slaveController)
-    return self.collider:getDistanceTo(slaveController.collider)
+    return self.collider:getDistanceToOrigin(slaveController.collider)
 end
 
 ---Check collision with another movement controller object
@@ -74,7 +75,6 @@ end
 
 ---Tick movement controller. Returns new X and Y coordinates.
 ---@param dt number
----@return number
 function mc:tick(dt)
     local x = math.cos(self.angle) * self.v * dt
 	local y = math.sin(self.angle) * self.v * dt

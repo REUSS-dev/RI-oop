@@ -42,7 +42,7 @@ setmetatable(collider, {__index = collider_parent.class}) -- Set parenthesis for
 ---@return boolean
 function collider:collideCircular(slaveCollider)
     local contactDistance = self.body.radius + slaveCollider.body.radius
-    local calculatedDistance = self:getDistanceTo(slaveCollider)
+    local calculatedDistance = self:getDistanceToOrigin(slaveCollider)
 
     return calculatedDistance <= contactDistance
 end

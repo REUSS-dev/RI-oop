@@ -35,7 +35,7 @@ local Collider_meta = {__index = collider}
 ---Get distance to other collider object
 ---@param slaveCollider Collider
 ---@return number
-function collider:getDistanceTo(slaveCollider)
+function collider:getDistanceToOrigin(slaveCollider)
     return math.sqrt((self.x-slaveCollider.x)^2 + (self.y-slaveCollider.y)^2)
 end
 
