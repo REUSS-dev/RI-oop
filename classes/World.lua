@@ -22,7 +22,7 @@ World.WorldObjectType = {
 
 -- vars
 
-calls = 0
+
 
 -- init
 
@@ -76,6 +76,34 @@ function world:tick(dt)
     for i = 1, self.dronesCount do
         local currentDrone = self.drones[i]
         local x, y, angle = currentDrone:getDirectionals()
+
+        currentDrone:incrementCounters()
+
+        for _, worldObject in ipairs(self.worldObjects) do
+            if worldObject.controller:checkCollision(currentDrone.controller) then
+                local objectType = worldObject:getType()
+
+                currentDrone:resetCounter(objectType)
+
+                if objectType == World.WorldObjectType.BASE and currentDrone:isCurrentDestination(World.WorldObjectType.BASE) then
+                    currentDrone:setDestination(World.WorldObjectType.RESOURCE)
+                    currentDrone:setFill(false)
+                    currentDrone:turnTowards(worldObject)
+                    currentDrone.controller:reverseAngle()
+                elseif objectType == World.WorldObjectType.RESOURCE and currentDrone:isCurrentDestination(World.WorldObjectType.RESOURCE) then
+                    currentDrone:setDestination(World.WorldObjectType.BASE)
+                    currentDrone:setFill(true)
+                    currentDrone:turnTowards(worldObject)
+                    currentDrone.controller:reverseAngle()
+                end
+            end
+        end
+
+        for v = i + 1, self.dronesCount do
+            local otherDrone = self.drones[v]
+
+            currentDrone:tryScream(otherDrone)
+        end
         
         if x < 0 then
             if math.cos(angle) < 0 then
@@ -97,19 +125,6 @@ function world:tick(dt)
             end
         end
 
-        for _, worldObject in ipairs(self.worldObjects) do
-            if worldObject.controller:checkCollision(currentDrone.controller) then
-                local objectType = worldObject:getType()
-
-                currentDrone:resetCounter(objectType)
-
-                if (objectType == World.WorldObjectType.BASE and not currentDrone:hasResource()) or (objectType == World.WorldObjectType.RESOURCE and currentDrone:hasResource()) then
-                    currentDrone:toggleResource()
-                    currentDrone.controller:reverseAngle()
-                end
-            end
-        end
-
         currentDrone:tick(dt)
     end
 end
@@ -124,9 +139,6 @@ function world:paint()
     for _, droneToDraw in ipairs(self.drones) do
         droneToDraw:draw()
     end
-
-    love.graphics.print(tostring(calls))
-    calls = 0
 end
 
 -- World fnc
