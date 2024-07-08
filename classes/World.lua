@@ -11,7 +11,7 @@ local drone = require("classes.Drone")
 
 -- config
 
-
+local CONNECTION_TIME = 0.1
 
 -- consts
 
@@ -44,6 +44,16 @@ drone.setCountersCount(2)
 ---@field worldObjects Destination[]
 local world = {}
 local World_meta = {__index = world}
+
+---Issue new connection event between drones
+---@param drone1 number Sending drone ID
+---@param drone2 number Receiving drone ID
+---@param exchangedCounterId DestinationTypeIndex Counter exchanged during connection
+function world:newConnection(drone1, drone2, exchangedCounterId)
+    local newConnection = {drone1, drone2, exchangedCounterId, CONNECTION_TIME}
+
+    self.connections[#self.connections+1] = newConnection
+end
 
 ---Place Base in a world.
 ---@param x pixels X coordinate of a Base to place
@@ -88,6 +98,7 @@ end
 ---Update a world
 ---@param dt number Delta time to update world object
 function world:tick(dt)
+    -- Update drones
     for i = 1, self.dronesCount do
         local currentDrone = self.drones[i]
         local x, y, angle = currentDrone:getDirectionals()
@@ -120,7 +131,10 @@ function world:tick(dt)
         for v = i + 1, self.dronesCount do
             local otherDrone = self.drones[v]
 
-            currentDrone:tryScream(otherDrone)
+            local counter = currentDrone:tryScream(otherDrone)
+            if counter then
+                self:newConnection(i, v, counter)
+            end
         end
         
         -- Bounce drone of walls
@@ -146,11 +160,52 @@ function world:tick(dt)
         -- Tick drone movement
         currentDrone:tick(dt)
     end
+
+    -- Update objects
+    for _, worldObject in pairs(self.worldObjects) do
+        worldObject:tick(dt)
+
+        local x, y, angle = worldObject:getDirectionals()
+
+        if x - dest.getDestinationPointRadius() < 0 then
+            if math.cos(angle) < 0 then
+                worldObject.controller:reflectAngleHorizontal()
+            end
+        elseif x + dest.getDestinationPointRadius() > self.width then
+            if math.cos(angle) > 0 then
+                worldObject.controller:reflectAngleHorizontal()
+            end
+        end
+        if y - dest.getDestinationPointRadius() < 0 then
+            if math.sin(angle) < 0 then
+                worldObject.controller:reflectAngleVertical()
+            end
+        elseif y + dest.getDestinationPointRadius() > self.height then
+            if math.sin(angle) > 0 then
+                worldObject.controller:reflectAngleVertical()
+            end
+        end
+    end
+
+    -- Update connections
+    for i = #self.connections, 1, -1 do
+        self.connections[i][4] = self.connections[i][4] - dt
+        if self.connections[i][4] <= 0 then
+            table.remove(self.connections, i)
+        end
+    end
 end
 
 ---Draw a world
 function world:paint()
     love.graphics.rectangle("line", 0, 0, self.width, self.height)
+
+    for i = 1, #self.connections do
+        local con = self.connections[i]
+        local color = dest.getTypeColor(con[3])
+        love.graphics.setColor(color[1], color[2], color[3], con[4]/CONNECTION_TIME*0.5)
+        love.graphics.line(self.drones[con[1]].controller.collider.x, self.drones[con[1]].controller.collider.y, self.drones[con[2]].controller.collider.x, self.drones[con[2]].controller.collider.y)
+    end
 
     for _, droneToDraw in ipairs(self.drones) do
         droneToDraw:draw()

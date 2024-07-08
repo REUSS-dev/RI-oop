@@ -14,11 +14,11 @@ local DESTINATION_BODY_TYPE = body.BodyType.CIRCULAR
 
 local DESTINATION_RADIUS = 50
 
-local DESTINATION_ANGLE_DEVIANCE = 0.1
+local DESTINATION_ANGLE_DEVIANCE = 0.01
 
 -- consts
 
-local DESTINATION_VELOCITY_DEFAULT = 0
+local DESTINATION_VELOCITY_DEFAULT = 30
 local DESTINATION_COLOR_DEFAULT = {1, 1, 1}
 
 -- vars
@@ -36,6 +36,13 @@ setmetatable(typeColors, {__index = function () return DESTINATION_COLOR_DEFAULT
 ---@return pixels Radius Radius of a circular body for destination points
 local function getDestinationPointRadius()
     return DESTINATION_RADIUS
+end
+
+---Gets color for type index
+---@param typeIndex DestinationTypeIndex Type index to return color for
+---@return ColorRGBA colortable Respectful color table
+local function getTypeColor(typeIndex)
+    return typeColors[typeIndex]
 end
 
 ---Sets color for type index
@@ -117,6 +124,7 @@ function Destination.new(x, y, destinationType, velocity)
 end
 
 Destination.registerType = setTypeColor
+Destination.getTypeColor = getTypeColor
 Destination.getDestinationPointRadius = getDestinationPointRadius
 
 return Destination
