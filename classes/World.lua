@@ -45,6 +45,12 @@ drone.setCountersCount(2)
 local world = {}
 local World_meta = {__index = world}
 
+---Returns if screams are enabled in the world object or newCount
+---@return boolean Screams **true**, if screams are enabled, **false** if screams are disabled
+function world:isScreamEnabled()
+    return self.screamsEnabled
+end
+
 ---Issue new connection event between drones
 ---@param drone1 number Sending drone ID
 ---@param drone2 number Receiving drone ID
@@ -77,6 +83,30 @@ function world:placeResource(x, y)
     return #self.worldObjects
 end
 
+---Remove last placed base
+function world:removeBase()
+    for i = #self.worldObjects, 1, -1 do
+        if self.worldObjects[i] then
+            if self.worldObjects[i].type == World.WorldObjectType.BASE then
+                self.worldObjects[i] = nil
+                return
+            end
+        end
+    end
+end
+
+---Remove last placed resource
+function world:removeResource()
+    for i = #self.worldObjects, 1, -1 do
+        if self.worldObjects[i] then
+            if self.worldObjects[i].type == World.WorldObjectType.RESOURCE then
+                self.worldObjects[i] = nil
+                return
+            end
+        end
+    end
+end
+
 ---Remove object from a world by its ObjectID
 ---@param id ObjectID ID of an object to remove
 function world:removeObject(id)
@@ -86,6 +116,7 @@ end
 ---Repopulate world with drones
 function world:repopulate()
     self.drones = {}
+    self.connections = {}
 
     for i = 1, self.dronesCount do
         self.drones[i] = drone.new(
@@ -93,6 +124,87 @@ function world:repopulate()
             math.random(0, self.height)
         )
     end
+end
+
+---Set the destination speed multiplier for the world object
+---@param mult number A number to multiply the destination speed by
+function world:setDestinationSpeedMultiplier(mult)
+    for _, destination in pairs(self.worldObjects) do
+
+        destination.controller.v = destination.baseVelocity * mult
+    end
+end
+
+---Set the new drone count. Creates or deletes drones if necessary.
+---@param newCount number
+function world:setDroneCount(newCount)
+    if newCount < self.dronesCount then
+        for i = newCount + 1, self.dronesCount do
+            self.drones[i] = nil
+        end
+
+        for i = #self.connections, 1, -1 do
+            local connection = self.connections[i]
+
+            if (connection[1] > newCount) or (connection[2] > newCount) then
+                table.remove(self.connections, i)
+            end
+        end
+
+        self.dronesCount = newCount
+
+        print("set new count", newCount)
+    elseif newCount > self.dronesCount then
+        for i = self.dronesCount + 1, newCount do
+            self.drones[i] = drone.new(
+                math.random(0, self.width),
+                math.random(0, self.height)
+            )
+        end
+
+        self.dronesCount = newCount
+    end
+end
+
+---Set the drone speed multiplier for the world object
+---@param mult number A number to multiply the drone speed by
+function world:setDroneSpeedMultiplier(mult)
+    for i = 1, self.dronesCount do
+        local drone = self.drones[i]
+
+        drone.controller.v = drone.baseVelocity * mult
+    end
+end
+
+---Sets if screams are enabled in the world object
+---@param bool boolean **true**, if screams are enabled, **false** if disabled
+function world:setScreamEnabled(bool)
+    self.screamsEnabled = bool
+end
+
+---Sets if connections between drones should be drawn on paint
+---@param bool boolean **true**, if connections are to be drawn, **false** if connections should not be drawn
+function world:setShowConnections(bool)
+    self.showConnections = bool
+    self.connections = {}
+end
+
+---Sets if drones should be drawn on paint
+---@param bool boolean **true**, if drones are to be drawn, **false** if drones should not be drawn
+function world:setShowDrones(bool)
+    self.showDrones = bool
+end
+
+---Sets if world objects should be drawn on paint
+---@param bool boolean **true**, if objects are to be drawn, **false** if objects should not be drawn
+function world:setShowObjects(bool)
+    self.showObjects = bool
+end
+
+---Sets if radius of drone scream should be drawn on paint
+---@param bool boolean **true**, if readiuses are to be drawn, **false** if radiuses should not be drawn
+function world:setShowRadius(bool)
+    self.showRadius = bool
 end
 
 ---Update a world
@@ -107,7 +219,7 @@ function world:tick(dt)
         currentDrone:incrementCounters()
 
         -- Check drone's collision with world objects
-        for _, worldObject in ipairs(self.worldObjects) do
+        for _, worldObject in pairs(self.worldObjects) do
             if worldObject.controller:checkCollision(currentDrone.controller) then
                 local objectType = worldObject:getType()
 
@@ -128,12 +240,16 @@ function world:tick(dt)
         end
 
         -- Exchange info with other drones around
-        for v = i + 1, self.dronesCount do
-            local otherDrone = self.drones[v]
+        if self.screamsEnabled then
+            for v = i + 1, self.dronesCount, 2 do
+                local otherDrone = self.drones[v]
 
-            local counter = currentDrone:tryScream(otherDrone)
-            if counter then
-                self:newConnection(i, v, counter)
+                if not otherDrone then print("missing", v) end
+
+                local counter, distance = currentDrone:tryScream(otherDrone)
+                if counter and self.showConnections and (distance > 5) then
+                    self:newConnection(i, v, counter)
+                end
             end
         end
         
@@ -162,7 +278,23 @@ function world:tick(dt)
     end
 
     -- Update objects
-    for _, worldObject in pairs(self.worldObjects) do
+    for i, worldObject in pairs(self.worldObjects) do
+
+        for u, slaveObject in pairs(self.worldObjects) do
+            if i ~= u then
+                if slaveObject.controller:checkCollision(worldObject.controller) then
+                    
+                    if slaveObject.type ~= worldObject.type then
+                        worldObject:turnTowards(slaveObject)
+                        worldObject.controller:reverseAngle()
+
+                        slaveObject:turnTowards(worldObject)
+                        slaveObject.controller:reverseAngle()
+                    end
+                end
+            end
+        end
+
         worldObject:tick(dt)
 
         local x, y, angle = worldObject:getDirectionals()
@@ -198,8 +330,6 @@ end
 
 ---Draw a world
 function world:paint()
-    love.graphics.rectangle("line", 0, 0, self.width, self.height)
-
     for i = 1, #self.connections do
         local con = self.connections[i]
         local color = dest.getTypeColor(con[3])
@@ -207,12 +337,21 @@ function world:paint()
         love.graphics.line(self.drones[con[1]].controller.collider.x, self.drones[con[1]].controller.collider.y, self.drones[con[2]].controller.collider.x, self.drones[con[2]].controller.collider.y)
     end
 
-    for _, droneToDraw in ipairs(self.drones) do
-        droneToDraw:draw()
+    if self.showDrones then
+        for i, droneToDraw in ipairs(self.drones) do
+            droneToDraw:draw()
+            if self.showRadius then
+                if i <= 25 then
+                    love.graphics.circle("line", droneToDraw.controller.collider.x, droneToDraw.controller.collider.y, drone.getScreamRadius())
+                end
+            end
+        end
     end
 
-    for _, object in ipairs(self.worldObjects) do
-        object:draw()
+    if self.showObjects then
+        for _, object in pairs(self.worldObjects) do
+            object:draw()
+        end
     end
 end
 
@@ -232,7 +371,13 @@ function World.new(width, height, droneAmount, placePoints)
         dronesCount = droneAmount,
         drones = {},
         worldObjects = {},
-        connections = {}
+        connections = {},
+
+        screamsEnabled = true,
+        showConnections = true,
+        showDrones = true,
+        showObjects = true,
+        showRadius = false,
     }
 
     setmetatable(obj, World_meta)

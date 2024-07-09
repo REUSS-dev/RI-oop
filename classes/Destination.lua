@@ -12,9 +12,9 @@ local controller = require("classes.MovementController")
 
 local DESTINATION_BODY_TYPE = body.BodyType.CIRCULAR
 
-local DESTINATION_RADIUS = 50
+local DESTINATION_RADIUS_BASE = 50
 
-local DESTINATION_ANGLE_DEVIANCE = 0.01
+local DESTINATION_ANGLE_DEVIANCE = 0.03
 
 -- consts
 
@@ -22,6 +22,8 @@ local DESTINATION_VELOCITY_DEFAULT = 30
 local DESTINATION_COLOR_DEFAULT = {1, 1, 1}
 
 -- vars
+
+local destinationRadius = DESTINATION_RADIUS_BASE*love.graphics.getHeight()/1080
 
 ---@type table<DestinationTypeIndex, ColorRGBA>
 local typeColors = {}
@@ -35,7 +37,7 @@ setmetatable(typeColors, {__index = function () return DESTINATION_COLOR_DEFAULT
 ---Returns standard radius of a destination point
 ---@return pixels Radius Radius of a circular body for destination points
 local function getDestinationPointRadius()
-    return DESTINATION_RADIUS
+    return destinationRadius
 end
 
 ---Gets color for type index
@@ -87,6 +89,32 @@ function destination:tick(dt)
     self.controller:tick(dt)
 end
 
+---Set angle of movement towards another drone/world object.
+---@param slaveDestination Drone|Destination Another movement controller containing world object
+function destination:turnTowards(slaveDestination)
+    local arccos = math.acos(
+        (slaveDestination.controller.collider.x - self.controller.collider.x)
+        /
+        (
+            math.abs(self.controller.collider.x - slaveDestination.controller.collider.x)
+            +
+            math.abs(self.controller.collider.y - slaveDestination.controller.collider.y)
+            +
+            0.000000001 -- prevent division by zero
+        )
+    )
+    local angleTowards = arccos *
+        (
+            self.controller.collider.y <= slaveDestination.controller.collider.y and arccos < 0 and -1
+            or
+            self.controller.collider.y > slaveDestination.controller.collider.y and arccos > 0 and -1
+            or
+            1
+        )
+
+    self.controller.angle = angleTowards
+end
+
 ---Paint destination point
 function destination:draw()
     self.body:paint(self.controller:getCoordinates())
@@ -105,16 +133,17 @@ function Destination.new(x, y, destinationType, velocity)
     
     ---@class Destination
     local obj = {
-        type = destinationType
+        type = destinationType,
+        baseVelocity = velocity or DESTINATION_VELOCITY_DEFAULT
     }
 
     
-    obj.body = body.new(DESTINATION_BODY_TYPE, DESTINATION_RADIUS, typeColors[destinationType]) --[[@as BodyCircular]]
+    obj.body = body.new(DESTINATION_BODY_TYPE, destinationRadius, typeColors[destinationType]) --[[@as BodyCircular]]
     obj.controller = controller.new(
         x,
         y,
         obj.body--[[@as Body]],
-        velocity or DESTINATION_VELOCITY_DEFAULT,
+        obj.baseVelocity,
         math.rad(math.random(1, 360))
     )
 

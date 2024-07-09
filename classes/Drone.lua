@@ -18,13 +18,13 @@ local DRONE_COLOR = {1, 1, 1}
 local DRONE_VELOCITY_BASE = 300/2
 local DRONE_VELOCITY_VARIANCE = 100/2
 
-local DRONE_ANGLE_DEVIANCE = 0.1
+local DRONE_ANGLE_DEVIANCE_BASE = 0.1
 
 local DRONE_COUNTER_INCREMENT = 10
 local DRONE_COUNTER_GENERATION_MINIMUM = 100
 local DRONE_COUNTER_GENERATION_MAXIMUM = 1000
 
-local DRONE_SCREAM_RADIUS = 30
+local DRONE_SCREAM_RADIUS_BASE = 30
 
 -- consts
 
@@ -34,6 +34,10 @@ local DRONE_VELOCITY_MAXIMUM = DRONE_VELOCITY_BASE + DRONE_VELOCITY_VARIANCE
 -- vars
 
 local countersCount = 0
+local droneScreamRadius = DRONE_SCREAM_RADIUS_BASE
+local droneAngleFluctuation = DRONE_ANGLE_DEVIANCE_BASE
+
+local drawDroneAngle = false
 
 -- init
 
@@ -41,10 +45,34 @@ local countersCount = 0
 
 -- fnc
 
+---Returns the radius all drones are screaming in
+---@return pixels Radius Radius in pixels
+local function getScreamRadius()
+    return droneScreamRadius
+end
+
+---Set the multiplier of drone's angle fluctuation. Base is 1.
+---@param mult number A number to multiply the base angle fluctuation by
+local function setAngleFluctuationMultiplier(mult)
+    droneAngleFluctuation = DRONE_ANGLE_DEVIANCE_BASE * mult
+end
+
 ---Set the amount of counters tracked by drone worldObjects
 ---@param counters number
 local function setCountersCount(counters)
     countersCount = counters
+end
+
+---Set the multiplier of drone's scream radius. Base is 1.
+---@param mult number A number to multiply the base scream radius by
+local function setScreamRadiusMultiplier(mult)
+    droneScreamRadius = DRONE_SCREAM_RADIUS_BASE * mult
+end
+
+---Set if drone direction facing should be drawn on paint
+---@param bool boolean **true**, if directions should be drawn, **false** if directions should not be drawn.
+local function setShowDroneDirections(bool)
+    drawDroneAngle = bool
 end
 
 -- classes
@@ -91,7 +119,7 @@ end
 ---Update a drone
 ---@param dt number Delta time to update destination point object
 function drone:tick(dt)
-    local curve = (math.random(0, 200) - 100)/100 * DRONE_ANGLE_DEVIANCE
+    local curve = (math.random(0, 200) - 100)/100 * droneAngleFluctuation
     self.controller:turn(curve)
 
     self.controller:tick(dt)
@@ -138,25 +166,28 @@ end
 ---Try to connect to other drone and exchange info. Returns counter ID if exchange is successful.
 ---@param slaveDrone Drone Another drone to attempt exchange information
 ---@return DestinationTypeIndex|false Screamed_counter Last screamed counter if one is screamed. **false** otherwise
+---@return pixels Distance Distance between respective drones
 function drone:tryScream(slaveDrone)
     -- Abort if drones are out of eachother's reach
-    if self.controller:getDistanceTo(slaveDrone.controller) > DRONE_SCREAM_RADIUS then
-        return false
+    local dronesDistance = self.controller:getDistanceTo(slaveDrone.controller)
+
+    if dronesDistance > droneScreamRadius then
+        return false, dronesDistance
     end
 
     local exchangedID;
 
     for i = 1, countersCount do
-        if self.counters[i] > slaveDrone.counters[i] + DRONE_SCREAM_RADIUS then
-            self.counters[i] = slaveDrone.counters[i] + DRONE_SCREAM_RADIUS
+        if self.counters[i] > slaveDrone.counters[i] + droneScreamRadius then
+            self.counters[i] = slaveDrone.counters[i] + droneScreamRadius
 
             if self:isCurrentDestination(i) then
                 self:turnTowards(slaveDrone)
             end
 
             exchangedID = i
-        elseif slaveDrone.counters[i] > self.counters[i] + DRONE_SCREAM_RADIUS then
-            slaveDrone.counters[i] = self.counters[i] + DRONE_SCREAM_RADIUS
+        elseif slaveDrone.counters[i] > self.counters[i] + droneScreamRadius then
+            slaveDrone.counters[i] = self.counters[i] + droneScreamRadius
 
             if slaveDrone:isCurrentDestination(i) then
                 slaveDrone:turnTowards(self)
@@ -166,12 +197,17 @@ function drone:tryScream(slaveDrone)
         end
     end
 
-    return exchangedID
+    return exchangedID, dronesDistance
 end
 
 ---Draw a drone
 function drone:draw()
     self.body:paint(self.controller:getCoordinates())
+
+    if drawDroneAngle then
+        love.graphics.setColor(0.5, 0.5, 0.5, 0.25)
+        love.graphics.line(self.controller.collider.x, self.controller.collider.y, self.controller.collider.x + math.cos(self.controller.angle) * self.controller.v/5, self.controller.collider.y + math.sin(self.controller.angle) * self.controller.v/5)
+    end
 end
 
 -- Drone fnc
@@ -186,6 +222,7 @@ function Drone.new(x, y, angle, velocity)
     ---@class Drone
     local obj = {
         counters = {},
+        baseVelocity = velocity or math.random(DRONE_VELOCITY_MINIMUM, DRONE_VELOCITY_MAXIMUM)
     }
 
     for i = 1, countersCount do
@@ -199,7 +236,7 @@ function Drone.new(x, y, angle, velocity)
         x,
         y,
         obj.body--[[@as Body]],
-        velocity or math.random(DRONE_VELOCITY_MINIMUM, DRONE_VELOCITY_MAXIMUM),
+        obj.baseVelocity,
         angle or math.rad(math.random(1, 360))
     )
     
@@ -211,5 +248,9 @@ function Drone.new(x, y, angle, velocity)
 end
 
 Drone.setCountersCount = setCountersCount
+Drone.setScreamRadiusMultiplier = setScreamRadiusMultiplier
+Drone.setAngleFluctuationMultiplier = setAngleFluctuationMultiplier
+Drone.getScreamRadius = getScreamRadius
+Drone.setShowDroneDirections = setShowDroneDirections
 
 return Drone
