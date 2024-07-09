@@ -33,32 +33,18 @@ local Collider = require("classes.Collider")
 local mc = {}
 local MovementController_meta = {__index = mc}
 
+---Check collision with another movement controller object
+---@param slaveController MovementController Another movement controller to check collision to
+---@return boolean Collision If two movement controllers collide
+function mc:checkCollision(slaveController)
+    return self.collider:collide(slaveController.collider)
+end
+
 ---Return movement controller's X and Y coordinates
 ---@return pixels X X coordinate of a movement controller
 ---@return pixels Y Y coordinate of a movement controller
 function mc:getCoordinates()
     return self.collider.x, self.collider.y
-end
-
----Turn movement controller by some amount
----@param rads radians Angle to turn movement controller by
-function mc:turn(rads)
-    self.angle = self.angle + rads
-end
-
----Turn a drone around
-function mc:reverseAngle()
-    self.angle = self.angle + math.pi
-end
-
----Reflect angle of a drone's movement vertically (mirrored over X axis)
-function mc:reflectAngleVertical()
-    self.angle = self.angle * -1
-end
-
----Reflect angle of a drone's movement horizontally (mirrored over Y axis)
-function mc:reflectAngleHorizontal()
-    self.angle = (self.angle + math.pi) * -1
 end
 
 ---Get distance to other movement controller object
@@ -69,11 +55,31 @@ function mc:getDistanceTo(slaveController)
     return self.collider:getDistanceToOrigin(slaveController.collider)
 end
 
----Check collision with another movement controller object
----@param slaveController MovementController Another movement controller to check collision to
----@return boolean Collision If two movement controllers collide
-function mc:checkCollision(slaveController)
-    return self.collider:collide(slaveController.collider)
+---Reflect angle of a drone's movement horizontally (mirrored over Y axis)
+function mc:reflectAngleHorizontal()
+    self.angle = (self.angle + math.pi) * -1
+end
+
+---Reflect angle of a drone's movement vertically (mirrored over X axis)
+function mc:reflectAngleVertical()
+    self.angle = self.angle * -1
+end
+
+---Turn a drone around
+function mc:reverseAngle()
+    self.angle = self.angle + math.pi
+end
+
+---Sets the angle of movement to movement controller object
+---@param angle radians Angle in radians for movement controller to face
+function mc:setAngle(angle)
+    self.angle = angle
+end
+
+---Sets the velocity of movement controller object
+---@param v number Velocity in abstract units for movement controller to move with
+function mc:setVelocity(v)
+    self.v = v
 end
 
 ---Tick movement controller. Returns new X and Y coordinates.
@@ -82,8 +88,13 @@ function mc:tick(dt)
     local x = math.cos(self.angle) * self.v * dt
 	local y = math.sin(self.angle) * self.v * dt
 
-    self.collider.x = self.collider.x + x
-    self.collider.y = self.collider.y + y
+    self.collider:move(x, y)
+end
+
+---Turn movement controller by some amount
+---@param rads radians Angle to turn movement controller by
+function mc:turn(rads)
+    self.angle = self.angle + rads
 end
 
 -- MovementController fnc

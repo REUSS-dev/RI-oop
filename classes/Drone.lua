@@ -15,8 +15,8 @@ local DRONE_BODY_TYPE = body.BodyType.CIRCULAR
 local DRONE_RADIUS = 1
 local DRONE_COLOR = {1, 1, 1}
 
-local DRONE_VELOCITY_BASE = 300/2
-local DRONE_VELOCITY_VARIANCE = 100/2
+local DRONE_VELOCITY_BASE = 300
+local DRONE_VELOCITY_VARIANCE = 100
 
 local DRONE_ANGLE_DEVIANCE_BASE = 0.1
 
@@ -148,7 +148,7 @@ function drone:turnTowards(slaveDrone)
             1
         )
 
-    self.controller.angle = angleTowards
+    self.controller:setAngle(angleTowards)
 end
 
 ---Set drone's new destionation

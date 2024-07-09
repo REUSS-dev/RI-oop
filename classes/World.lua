@@ -131,7 +131,7 @@ end
 function world:setDestinationSpeedMultiplier(mult)
     for _, destination in pairs(self.worldObjects) do
 
-        destination.controller.v = destination.baseVelocity * mult
+        destination.controller:setVelocity(destination.baseVelocity * mult)
     end
 end
 
@@ -172,7 +172,7 @@ function world:setDroneSpeedMultiplier(mult)
     for i = 1, self.dronesCount do
         local drone = self.drones[i]
 
-        drone.controller.v = drone.baseVelocity * mult
+        drone.controller:setVelocity(drone.baseVelocity * mult)
     end
 end
 

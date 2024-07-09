@@ -1,3 +1,4 @@
+---@diagnostic disable: duplicate-set-field
 local qgui, locale
 
 local hintFont = love.graphics.newFont("font.ttf", 15)
@@ -15,8 +16,6 @@ function love.load()
     G_world = G_world.new(love.graphics.getWidth(), love.graphics.getHeight(), 1000, "yes")
 
     require("scripts.swarmMenuLayout")
-
-    multiplier = 1
 
     qgui.hook()
 end

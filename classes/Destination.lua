@@ -112,7 +112,7 @@ function destination:turnTowards(slaveDestination)
             1
         )
 
-    self.controller.angle = angleTowards
+    self.controller:setAngle(angleTowards)
 end
 
 ---Paint destination point

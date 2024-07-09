@@ -39,6 +39,14 @@ function collider:getDistanceToOrigin(slaveCollider)
     return math.sqrt((self.x-slaveCollider.x)^2 + (self.y-slaveCollider.y)^2)
 end
 
+---Move collider by some amount both horizontally and vertically
+---@param x pixels Amount to move by X-axis
+---@param y pixels Amount to move by Y-axis
+function collider:move(x, y)
+    self.x = self.x + x
+    self.y = self.y + y
+end
+
 -- Collider fnc
 
 ---Create new collider object
