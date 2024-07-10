@@ -7,7 +7,7 @@ local font16 = love.graphics.newFont("font.ttf", 16)
 -- config
 
 local PANEL_WIDTH = 300
-local SHIFT_DISTANCE = 300
+local SHIFT_DISTANCE = PANEL_WIDTH
 
 local MAX_DESTINATIONS = 5
 
@@ -50,6 +50,7 @@ local moveTable = {
     "menuButtonShowRadius",
     "menuLabelShowAngle",
     "menuButtonShowAngle",
+    "exit"
 }
 
 -- vars
@@ -732,3 +733,20 @@ function obj.fncRelease(objr, x, y, but)
     oldClick(objr, x, y, but)
     drone.setShowDroneDirections(obj.check)
 end
+
+--exit
+qgui.new{
+    "exit",
+    "button",
+    fill = true,
+    w = 150,
+    h = 50,
+    x = love.graphics.getWidth() + PANEL_WIDTH - 150 - 10,
+    y = love.graphics.getHeight() - 50 - 10,
+    text = "Выход",
+    font = font16,
+    fnc = function ()
+        love.event.quit()
+    end,
+    color = {0.75, 0, 0, 0.75}
+}
