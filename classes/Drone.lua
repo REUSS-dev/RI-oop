@@ -92,7 +92,7 @@ end
 ---Test if passed destionation type is set for drone object as current destination
 ---@param testDestinationId DestinationTypeIndex Type of a world object/destination type
 ---@return boolean Test **true**, if current destination matches object's *testDestinationId*, **false** otherwise
-function drone:isCurrentDestination(testDestinationId)
+function drone:isCurentDestination(testDestinationId)
     return testDestinationId == self.currentDestinationId
 end
 
@@ -181,7 +181,7 @@ function drone:tryScream(slaveDrone)
         if self.counters[i] > slaveDrone.counters[i] + droneScreamRadius then
             self.counters[i] = slaveDrone.counters[i] + droneScreamRadius
 
-            if self:isCurrentDestination(i) then
+            if self:isCurentDestination(i) then
                 self:turnTowards(slaveDrone)
             end
 
@@ -189,7 +189,7 @@ function drone:tryScream(slaveDrone)
         elseif slaveDrone.counters[i] > self.counters[i] + droneScreamRadius then
             slaveDrone.counters[i] = self.counters[i] + droneScreamRadius
 
-            if slaveDrone:isCurrentDestination(i) then
+            if slaveDrone:isCurentDestination(i) then
                 slaveDrone:turnTowards(self)
             end
 

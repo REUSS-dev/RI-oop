@@ -225,12 +225,12 @@ function world:tick(dt)
 
                 currentDrone:resetCounter(objectType)
 
-                if objectType == World.WorldObjectType.BASE and currentDrone:isCurrentDestination(World.WorldObjectType.BASE) then
+                if objectType == World.WorldObjectType.BASE and currentDrone:isCurentDestination(World.WorldObjectType.BASE) then
                     currentDrone:setDestination(World.WorldObjectType.RESOURCE)
                     currentDrone:setFill(false)
                     currentDrone:turnTowards(worldObject)
                     currentDrone.controller:reverseAngle()
-                elseif objectType == World.WorldObjectType.RESOURCE and currentDrone:isCurrentDestination(World.WorldObjectType.RESOURCE) then
+                elseif objectType == World.WorldObjectType.RESOURCE and currentDrone:isCurentDestination(World.WorldObjectType.RESOURCE) then
                     currentDrone:setDestination(World.WorldObjectType.BASE)
                     currentDrone:setFill(true)
                     currentDrone:turnTowards(worldObject)

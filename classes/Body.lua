@@ -61,7 +61,7 @@ function Body.new(type, ...)
 
     if type == Body.BodyType.CIRCULAR then
         ---@class BodyCircular
-        ---@field radius radians
+        ---@field radius pixels
         ---@field color ColorRGBA
         obj = {
             bodyType = Body.BodyType.CIRCULAR,
