@@ -386,12 +386,12 @@ function World.new(width, height, droneAmount, placePoints)
 
     if placePoints then
         obj:placeBase(
-            math.random(dest.getDestinationPointRadius(), obj.width - dest.getDestinationPointRadius()),
+            math.random(dest.getDestinationPointRadius(), obj.width/2),
             math.random(dest.getDestinationPointRadius(), obj.height - dest.getDestinationPointRadius())
         )
 
         obj:placeResource(
-            math.random(dest.getDestinationPointRadius(), obj.width - dest.getDestinationPointRadius()),
+            math.random(obj.width/2, obj.width - dest.getDestinationPointRadius()),
             math.random(dest.getDestinationPointRadius(), obj.height - dest.getDestinationPointRadius())
         )
     end

@@ -131,10 +131,10 @@ function drone:turnTowards(slaveDrone)
     local arccos = math.acos(
         (slaveDrone.controller.collider.x - self.controller.collider.x)
         /
-        (
-            math.abs(self.controller.collider.x - slaveDrone.controller.collider.x)
+        math.sqrt(
+            (self.controller.collider.x - slaveDrone.controller.collider.x)^2
             +
-            math.abs(self.controller.collider.y - slaveDrone.controller.collider.y)
+            (self.controller.collider.y - slaveDrone.controller.collider.y)^2
             +
             0.000000001 -- prevent division by zero
         )
